@@ -38,14 +38,14 @@ class MainActivity : AppCompatActivity() {
         getCurrentLocation()
 
 
-        getCurentWeather()
+
 
     }
 
-    private fun getCurentWeather() {
+    private fun getCurentWeather(latitude:String,longitude:String) {
         GlobalScope.launch(Dispatchers.IO) {
             val response = try{
-                RetrofitInstance.api.getCurrentWeather("india","metric",applicationContext.getString(R.string.api_key))
+                RetrofitInstance.api.getCurrentWeather(latitude,longitude,applicationContext.getString(R.string.api_key))
 
             }catch (e:IOException){
                 Toast.makeText(applicationContext,"app error ${e.message}",Toast.LENGTH_SHORT).show()
@@ -80,14 +80,15 @@ class MainActivity : AppCompatActivity() {
 
                     binding.apply {
                         tvStatus.text = data.weather[0].description
+                        tvLocation.text = data.name
                         tvWind.text = "${data.wind.speed.toString()} km/h"
                         tvLocation.text = "${data.name}\n${data.sys.country}"
-                        tvTemp.text = "${data.main.temp.toInt()}°C"
-                        tvFeelsLike.text = "Feels like: ${data.main.feels_like}°C"
+                        tvTemp.text = "${(data.main.temp/10).toInt()}°C"
+                        tvFeelsLike.text = "Feels like: ${data.main.feels_like/10}°C"
                         tvHumidity.text = "${data.main.humidity}%"
                         tvPressure.text = "${data.main.pressure}hPa"
-                        tvMinTemp.text = "Min:${data.main.temp_min}°C"
-                        tvMaxTemp.text = "Max:${data.main.temp_max}°C"
+                        tvMinTemp.text = "Min:${(data.main.temp_min/10).toInt()}°C"
+                        tvMaxTemp.text = "Max:${(data.main.temp_max/10).toInt()}°C"
                         tvUpdateTime.text = "Last Updated On:${
                             SimpleDateFormat(
                                 "hh:mm a",
@@ -126,7 +127,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     else{
                         Toast.makeText(this,"Get Successfully",Toast.LENGTH_SHORT).show()
-
+                        getCurentWeather(location.latitude.toString(),location.longitude.toString())
                     }
 
                 }
