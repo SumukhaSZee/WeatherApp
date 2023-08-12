@@ -56,5 +56,8 @@ dependencies {
     //play-service-locations dependancy//
     implementation 'com.google.android.gms:play-services-location:21.0.1'
 
+    //picasso//
+    implementation 'com.squareup.picasso:picasso:2.8'
+
 
 }

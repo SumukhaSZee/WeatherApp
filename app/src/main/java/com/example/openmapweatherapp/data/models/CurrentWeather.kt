@@ -1,4 +1,4 @@
-package com.example.openmapweatherapp
+package com.example.openmapweatherapp.data.models
 
 data class CurrentWeather(
     val base: String,

@@ -13,8 +13,18 @@ import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import com.example.openmapweatherapp.databinding.ActivityMainBinding
+import com.example.openmapweatherapp.utils.RetrofitInstance
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.squareup.picasso.Picasso
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import retrofit2.HttpException
+import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding:ActivityMainBinding
@@ -27,7 +37,74 @@ class MainActivity : AppCompatActivity() {
         fusedLocationProviderClient=LocationServices.getFusedLocationProviderClient(this)
         getCurrentLocation()
 
+
+        getCurentWeather()
+
     }
+
+    private fun getCurentWeather() {
+        GlobalScope.launch(Dispatchers.IO) {
+            val response = try{
+                RetrofitInstance.api.getCurrentWeather("india","metric",applicationContext.getString(R.string.api_key))
+
+            }catch (e:IOException){
+                Toast.makeText(applicationContext,"app error ${e.message}",Toast.LENGTH_SHORT).show()
+                return@launch
+            }catch (e:HttpException){
+                Toast.makeText(applicationContext,"http error ${e.message}",Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+            if(response.isSuccessful && response.body()!=null){
+                withContext(Dispatchers.Main){
+
+
+                    val data = response.body()!!
+
+                    val iconid = data.weather[0].icon
+
+                    val imgUrl = "https://openweathermap.org/img/w/$iconid.png"
+
+                    Picasso.get().load(imgUrl).into(binding.imgWeather)
+
+                    binding.tvSunrise.text=
+                        SimpleDateFormat(
+                            "hh:mm a",
+                            Locale.ENGLISH
+                        ).format(data.sys.sunrise * 1000)
+
+                    binding.tvSunset.text=
+                        SimpleDateFormat(
+                            "hh:mm a",
+                            Locale.ENGLISH
+                        ).format(data.sys.sunset * 1000)
+
+                    binding.apply {
+                        tvStatus.text = data.weather[0].description
+                        tvWind.text = "${data.wind.speed.toString()} km/h"
+                        tvLocation.text = "${data.name}\n${data.sys.country}"
+                        tvTemp.text = "${data.main.temp.toInt()}°C"
+                        tvFeelsLike.text = "Feels like: ${data.main.feels_like}°C"
+                        tvHumidity.text = "${data.main.humidity}%"
+                        tvPressure.text = "${data.main.pressure}hPa"
+                        tvMinTemp.text = "Min:${data.main.temp_min}°C"
+                        tvMaxTemp.text = "Max:${data.main.temp_max}°C"
+                        tvUpdateTime.text = "Last Updated On:${
+                            SimpleDateFormat(
+                                "hh:mm a",
+                                Locale.ENGLISH
+                            ).format(data.dt * 1000)
+                        }"
+
+                    }
+
+
+                }
+            }
+
+
+        }
+    }
+
     private fun getCurrentLocation(){
         if(checkPermissions()){
             if(isLocationEnabled()){

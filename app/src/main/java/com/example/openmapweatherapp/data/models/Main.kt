@@ -1,4 +1,4 @@
-package com.example.openmapweatherapp
+package com.example.openmapweatherapp.data.models
 
 data class Main(
     val feels_like: Double,
@@ -6,5 +6,5 @@ data class Main(
     val pressure: Int,
     val temp: Double,
     val temp_max: Double,
-    val temp_min: Int
+    val temp_min: Double
 )
