@@ -1,44 +1,39 @@
 package com.example.openmapweatherapp
 
 import android.Manifest
-import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
+import android.icu.lang.UCharacter.VerticalOrientation
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
-import android.location.LocationManager
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.provider.Settings
 import android.util.Log
-import android.widget.SearchView
-import android.widget.Toast
+import android.view.View
+import android.widget.TextView
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.openmapweatherapp.data.models.CurrentWeather
+import com.example.openmapweatherapp.data.models.Item
 import com.example.openmapweatherapp.databinding.ActivityMainBinding
-import com.example.openmapweatherapp.utils.RetrofitInstance
+import com.example.openmapweatherapp.viewmodel.WeatherViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.Task
 import com.squareup.picasso.Picasso
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import retrofit2.HttpException
-import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-
     private var city: String = "berlin"
-
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
-
+    private lateinit var viewModel:WeatherViewModel
+    private lateinit var textView: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,6 +42,9 @@ class MainActivity : AppCompatActivity() {
 
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
+        viewModel = ViewModelProvider(this).get(WeatherViewModel::class.java)
+
+
 
         binding.searchView.setOnQueryTextListener(object: androidx.appcompat.widget.SearchView.OnQueryTextListener{
             override fun onQueryTextSubmit(query: String?): Boolean {
@@ -54,18 +52,20 @@ class MainActivity : AppCompatActivity() {
                 if (query!= null){
                     city = query
                 }
-                getCurrentWeather(city)
+                viewModel.getCurrentWeather(city)
                 return true
             }
 
-            override fun onQueryTextChange(newText: String?): Boolean {
-                return false
+            override fun onQueryTextChange(newText: String): Boolean {
+                Log.d("check",newText)
+                viewModel.getsuggestions(newText)
+                return true
             }
 
         })
 
 
-        getCurrentWeather(city)
+        viewModel.getCurrentWeather(city)
 
 
 
@@ -73,6 +73,59 @@ class MainActivity : AppCompatActivity() {
             fetchLocation()
         }
 
+        viewModel.data.observe(this, Observer {
+            renderUI(it)
+        })
+
+        viewModel.data1.observe(this, Observer {
+            renderUI2(it)
+        })
+    }
+
+
+    private fun renderUI2(data:List<Item>){
+        binding.recyclerview.layoutManager = LinearLayoutManager(this)
+        val adapter = MyAdapter(data,viewModel,binding)
+        binding.recyclerview.visibility=View.VISIBLE
+        binding.recyclerview.adapter = adapter
+    }
+
+
+
+    private fun renderUI(data:CurrentWeather){
+        val iconId = data.weather[0].icon
+        val imgUrl = "https://openweathermap.org/img/wn/$iconId@4x.png"
+
+        Picasso.get().load(imgUrl).into(binding.imgWeather)
+
+        binding.tvSunset.text =
+            dateFormatConverter(
+                data.sys.sunset.toLong()
+            )
+
+        binding.tvSunrise.text =
+            dateFormatConverter(
+                data.sys.sunrise.toLong()
+            )
+
+        binding.apply {
+            tvStatus.text = data.weather[0].description
+            tvWind.text = "${data.wind.speed} KM/H"
+            tvLocation.text = "${data.name}\n${data.sys.country}"
+            tvTemp.text = "${data.main.temp.toInt()}°C"
+            tvFeelsLike.text = "Feels like: ${data.main.feels_like.toInt()}°C"
+            tvMinTemp.text = "Min temp: ${data.main.temp_min.toInt()}°C"
+            tvMaxTemp.text = "Max temp: ${data.main.temp_max.toInt()}°C"
+            tvHumidity.text = "${data.main.humidity} %"
+            tvPressure.text = "${data.main.pressure} hPa"
+            tvUpdateTime.text = "Last Update: ${
+                dateFormatConverter(
+                    data.dt.toLong()
+                )
+            }"
+
+
+        }
     }
 
 
@@ -112,72 +165,11 @@ class MainActivity : AppCompatActivity() {
                 city = address[0].locality
             }
 
-            getCurrentWeather(city)
+            viewModel.getCurrentWeather(city)
         }
     }
 
-    private fun getCurrentWeather(city: String) {
-        GlobalScope.launch(Dispatchers.IO) {
-            val response = try {
-                RetrofitInstance.api.getCurrentWeather(
-                    city,
-                    "metric",
-                    applicationContext.getString(R.string.api_key)
-                )
-            } catch (e: IOException) {
-                Toast.makeText(applicationContext, "app error ${e.message}", Toast.LENGTH_SHORT)
-                    .show()
-                return@launch
-            } catch (e: HttpException) {
-                Toast.makeText(applicationContext, "http error ${e.message}", Toast.LENGTH_SHORT)
-                    .show()
-                return@launch
-            }
 
-            if (response.isSuccessful && response.body() != null) {
-                withContext(Dispatchers.Main) {
-
-                    val data = response.body()!!
-
-                    val iconId = data.weather[0].icon
-
-                    val imgUrl = "https://openweathermap.org/img/wn/$iconId@4x.png"
-
-                    Picasso.get().load(imgUrl).into(binding.imgWeather)
-
-                    binding.tvSunset.text =
-                        dateFormatConverter(
-                            data.sys.sunset.toLong()
-                        )
-
-                    binding.tvSunrise.text =
-                        dateFormatConverter(
-                            data.sys.sunrise.toLong()
-                        )
-
-                    binding.apply {
-                        tvStatus.text = data.weather[0].description
-                        tvWind.text = "${data.wind.speed} KM/H"
-                        tvLocation.text = "${data.name}\n${data.sys.country}"
-                        tvTemp.text = "${data.main.temp.toInt()}°C"
-                        tvFeelsLike.text = "Feels like: ${data.main.feels_like.toInt()}°C"
-                        tvMinTemp.text = "Min temp: ${data.main.temp_min.toInt()}°C"
-                        tvMaxTemp.text = "Max temp: ${data.main.temp_max.toInt()}°C"
-                        tvHumidity.text = "${data.main.humidity} %"
-                        tvPressure.text = "${data.main.pressure} hPa"
-                        tvUpdateTime.text = "Last Update: ${
-                            dateFormatConverter(
-                                data.dt.toLong()
-                            )
-                        }"
-
-
-                    }
-
-                }
-            }
-        }
-    }
 
 
         }
