@@ -1,4 +1,4 @@
-package com.example.openmapweatherapp.data
+package com.example.openmapweatherapp.Api
 
 import com.example.openmapweatherapp.data.models.SearchWeather
 import retrofit2.Response

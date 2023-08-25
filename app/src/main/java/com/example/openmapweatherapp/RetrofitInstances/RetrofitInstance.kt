@@ -1,11 +1,12 @@
-package com.example.openmapweatherapp.utils
+package com.example.openmapweatherapp.RetrofitInstances
 
-import com.example.openmapweatherapp.data.ApiInterface
+import com.example.openmapweatherapp.Api.ApiInterface
+import com.example.openmapweatherapp.utils.Util
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitInstance {
-    val api :ApiInterface by lazy {
+    val api : ApiInterface by lazy {
         Retrofit.Builder()
             .baseUrl(Util.Base)
             .addConverterFactory(GsonConverterFactory.create())

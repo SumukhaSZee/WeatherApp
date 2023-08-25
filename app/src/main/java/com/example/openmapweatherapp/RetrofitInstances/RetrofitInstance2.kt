@@ -1,7 +1,8 @@
-package com.example.openmapweatherapp.utils
+package com.example.openmapweatherapp.RetrofitInstances
 
 
-import com.example.openmapweatherapp.data.ApiInterface2
+import com.example.openmapweatherapp.Api.ApiInterface2
+import com.example.openmapweatherapp.utils.Util
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 

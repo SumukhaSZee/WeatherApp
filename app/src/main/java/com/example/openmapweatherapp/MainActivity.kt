@@ -2,7 +2,6 @@ package com.example.openmapweatherapp
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.icu.lang.UCharacter.VerticalOrientation
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
@@ -11,21 +10,20 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.TextView
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.openmapweatherapp.Adapter.MyAdapter
 import com.example.openmapweatherapp.data.models.CurrentWeather
 import com.example.openmapweatherapp.data.models.Item
 import com.example.openmapweatherapp.databinding.ActivityMainBinding
+import com.example.openmapweatherapp.utils.Date
 import com.example.openmapweatherapp.viewmodel.WeatherViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.Task
 import com.squareup.picasso.Picasso
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
@@ -33,7 +31,7 @@ class MainActivity : AppCompatActivity() {
     private var city: String = "berlin"
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
     private lateinit var viewModel:WeatherViewModel
-    private lateinit var textView: TextView
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -93,18 +91,19 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun renderUI(data:CurrentWeather){
+        val dateob = Date()
         val iconId = data.weather[0].icon
         val imgUrl = "https://openweathermap.org/img/wn/$iconId@4x.png"
 
         Picasso.get().load(imgUrl).into(binding.imgWeather)
 
         binding.tvSunset.text =
-            dateFormatConverter(
+            dateob.dateFormatConverter(
                 data.sys.sunset.toLong()
             )
 
         binding.tvSunrise.text =
-            dateFormatConverter(
+            dateob.dateFormatConverter(
                 data.sys.sunrise.toLong()
             )
 
@@ -119,7 +118,7 @@ class MainActivity : AppCompatActivity() {
             tvHumidity.text = "${data.main.humidity} %"
             tvPressure.text = "${data.main.pressure} hPa"
             tvUpdateTime.text = "Last Update: ${
-                dateFormatConverter(
+               dateob.dateFormatConverter(
                     data.dt.toLong()
                 )
             }"
@@ -173,10 +172,3 @@ class MainActivity : AppCompatActivity() {
 
 
         }
-private fun dateFormatConverter(date: Long): String {
-
-    return SimpleDateFormat(
-        "hh:mm a",
-        Locale.ENGLISH
-    ).format(Date(date * 1000))
-}

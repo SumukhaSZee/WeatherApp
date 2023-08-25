@@ -1,11 +1,11 @@
-package com.example.openmapweatherapp
+package com.example.openmapweatherapp.Adapter
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.RecyclerView
+import com.example.openmapweatherapp.R
 import com.example.openmapweatherapp.data.models.Item
 import com.example.openmapweatherapp.databinding.ActivityMainBinding
 import com.example.openmapweatherapp.viewmodel.WeatherViewModel

@@ -1,22 +1,15 @@
 package com.example.openmapweatherapp.viewmodel
 
 import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.openmapweatherapp.R
 import com.example.openmapweatherapp.data.models.CurrentWeather
 import com.example.openmapweatherapp.data.models.Item
-import com.example.openmapweatherapp.data.models.SearchWeather
-import com.example.openmapweatherapp.utils.RetrofitInstance
-import com.example.openmapweatherapp.utils.RetrofitInstance2
-import com.squareup.picasso.Picasso
+import com.example.openmapweatherapp.RetrofitInstances.RetrofitInstance
+import com.example.openmapweatherapp.RetrofitInstances.RetrofitInstance2
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import retrofit2.HttpException
-import java.io.IOException
 import java.lang.Exception
 
 class WeatherViewModel:ViewModel() {
